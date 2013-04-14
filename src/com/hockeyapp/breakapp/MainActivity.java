@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
   
   public void onResume() {
     super.onResume();
-    CrashManager.register(this, "98254247ac79b7cd96dbec27c53b7c9f");
+    CrashManager.register(this, HOCKEYAPP_ID);
   }
   
   public void onCheckUpdatesClicked(View v) {
