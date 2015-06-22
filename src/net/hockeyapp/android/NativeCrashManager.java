@@ -38,7 +38,8 @@ public class NativeCrashManager {
       // Write the stacktrace to disk
       BufferedWriter write = new BufferedWriter(new FileWriter(path));
       write.write("Package: " + Constants.APP_PACKAGE + "\n");
-      write.write("Version: " + Constants.APP_VERSION + "\n");
+      write.write("Version Code: " + Constants.APP_VERSION + "\n");
+      write.write("Version Name: " + Constants.APP_VERSION_NAME + "\n");
       write.write("Android: " + Constants.ANDROID_VERSION + "\n");
       write.write("Manufacturer: " + Constants.PHONE_MANUFACTURER + "\n");
       write.write("Model: " + Constants.PHONE_MODEL + "\n");
