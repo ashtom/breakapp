@@ -4,8 +4,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
+import java.io.OutputStream;
+import java.net.URL;
+import java.security.KeyStore;
 import java.util.Date;
 import java.util.UUID;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
@@ -61,32 +68,111 @@ public class NativeCrashManager {
     new Thread() {
       @Override
       public void run() {
-        try {
-          DefaultHttpClient httpClient = new DefaultHttpClient(); 
-          HttpPost httpPost = new HttpPost("https://rink.hockeyapp.net/api/2/apps/" + identifier + "/crashes/upload");
-          
-          MultipartEntity entity = new MultipartEntity();
-    
-          File dumpFile = new File(Constants.FILES_PATH, dumpFilename);
-          entity.addPart("attachment0", new FileBody(dumpFile));      
-    
-          File logFile = new File(Constants.FILES_PATH, logFilename);
-          entity.addPart("log", new FileBody(logFile));      
-    
-          httpPost.setEntity(entity);
-          
-          httpClient.execute(httpPost);   
-        }
-        catch (Exception e) {
-          e.printStackTrace();
-        } 
-        finally {
-          activity.deleteFile(logFilename);
-          activity.deleteFile(dumpFilename);
-        }
+        uploadWithHttpClient(identifier, dumpFilename, logFilename); /// existing implementation, moved to a function
+//        uploadWithHttpsURLConnection(identifier, dumpFilename, logFilename); /// new proposed implementation, has a few issues still
+        
+        activity.deleteFile(logFilename);
+        activity.deleteFile(dumpFilename);
       }
     }.start();
-  } 
+  }
+  
+  private static void uploadWithHttpClient(String identifier, String dumpFilename, String logFilename)
+  {
+    try {
+      DefaultHttpClient httpClient = new DefaultHttpClient(); 
+      HttpPost httpPost = new HttpPost("https://rink.hockeyapp.net/api/2/apps/" + identifier + "/crashes/upload");
+      
+      MultipartEntity entity = new MultipartEntity();
+      
+      File dumpFile = new File(Constants.FILES_PATH, dumpFilename);
+      entity.addPart("attachment0", new FileBody(dumpFile));
+      
+      File logFile = new File(Constants.FILES_PATH, logFilename);
+      entity.addPart("log", new FileBody(logFile));
+      
+      httpPost.setEntity(entity);
+      
+      httpClient.execute(httpPost);
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private static void uploadWithHttpsURLConnection(String identifier, String dumpFilename, String logFilename)
+  {
+    /// It doesn't seem to matter if we use HttpsURLConnection or HttpURLConnection.
+    /// The HTTP status code comes back the same, they seem to be based off the Content-Type settings.
+    HttpsURLConnection urlConnection = null;
+    try {
+      URL crashURL = new URL("https://rink.hockeyapp.net/api/2/apps/" + identifier + "/crashes/upload");
+      
+      /// Use for HttpsURLConnection
+      KeyStore keystore = null;
+      String algorithm = TrustManagerFactory.getDefaultAlgorithm();
+      TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+      tmf.init(keystore); /// passing a null KeyStore uses the default system KeyStore.
+      SSLContext context = SSLContext.getInstance("TLS");
+      context.init(null, tmf.getTrustManagers(), null);
+      
+      urlConnection = (HttpsURLConnection) crashURL.openConnection();
+      urlConnection.setSSLSocketFactory(context.getSocketFactory()); /// do not set if using HttpURLConnection
+      
+      urlConnection.setRequestMethod("POST");
+      urlConnection.setDoOutput(true); /// needed for writing to the output stream
+      urlConnection.setDoInput(true); /// not sure if necessary or not
+      urlConnection.setReadTimeout(10000);
+      urlConnection.setConnectTimeout(15000);
+      
+      MultipartEntity entity = new MultipartEntity();
+      
+      File dumpFile = new File(Constants.FILES_PATH, dumpFilename);
+      entity.addPart("attachment0", new FileBody(dumpFile));
+
+      File logFile = new File(Constants.FILES_PATH, logFilename);
+      entity.addPart("log", new FileBody(logFile));
+      
+      urlConnection.setRequestProperty("Connection", "Keep-Alive");
+      urlConnection.addRequestProperty("Content-Length", Long.toString(entity.getContentLength()));
+      
+      /// Content-Type settings tried: 1, 2, and 3
+      /// 1 - Deprecated methods: getName, getValue.
+      /// Gets 201 statusCode: Created: The request has been fulfilled and resulted in a new resource being created.
+      /// No crash is seen on HockeyApp though.
+//      String name = entity.getContentType().getName();
+//      String value = entity.getContentType().getValue();
+//      urlConnection.addRequestProperty(name, value);
+      
+      /// 2 - Custom multipart boundary. Gets 401 statusCode.
+      /// HockeyApp guys: What should be sent up for a WWW-Authenticate header to overcome this error?
+      urlConnection.addRequestProperty("Content-Type", "multipart/form-data; boundary=--HockeyAppBoundary--");
+      
+      /// 3 - No Content-Type. Gets 415 statusCode.
+      
+      OutputStream os = urlConnection.getOutputStream();
+      entity.writeTo(os);
+      os.close();
+      
+      urlConnection.connect();
+      
+      int statusCode = urlConnection.getResponseCode();
+      if (statusCode == HttpsURLConnection.HTTP_OK) {
+        Log.d(Constants.TAG, "crash uploaded successfully");
+      }
+      else {
+        Log.d(Constants.TAG, "ERROR: " + statusCode);
+      }
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+    finally {
+      if (urlConnection != null) {
+        urlConnection.disconnect();
+      }
+    }
+  }
   
   private static String[] searchForDumpFiles() {
     if (Constants.FILES_PATH != null) {
