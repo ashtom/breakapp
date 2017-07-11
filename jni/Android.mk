@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 LOCAL_MODULE := native  
-LOCAL_SRC_FILES := native.cpp  
+LOCAL_SRC_FILES := native.cpp breakpad.cpp crash.cpp 
 LOCAL_STATIC_LIBRARIES += breakpad_client
 
 include $(BUILD_SHARED_LIBRARY)
