@@ -100,7 +100,21 @@
         android:layout_marginBottom="10dip"
         android:layout_marginTop="0dp"
         android:onClick="onNativeCrashClicked"
-        android:text="C++ Crash" />
+        android:text="C++ Crash (stack)" />
+        
+    <Button
+        android:id="@+id/ndk_button_heap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ndk_button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip"
+        android:layout_marginBottom="10dip"
+        android:layout_marginTop="0dp"
+        android:onClick="onNativeCrashClickedWithHeap"
+        android:text="C++ Crash (heap)" />
     
     <TextView
         android:id="@+id/text_view"

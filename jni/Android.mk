@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 LOCAL_MODULE := native  
-LOCAL_SRC_FILES := native.cpp  
+LOCAL_SRC_FILES := native.cpp breakpad.cpp crash.cpp 
 LOCAL_STATIC_LIBRARIES += breakpad_client
 
 include $(BUILD_SHARED_LIBRARY)
@@ -14,5 +14,5 @@ include $(BUILD_SHARED_LIBRARY)
 ifneq ($(NDK_MODULE_PATH),)
   $(call import-module,google_breakpad)
 else
-  include $(LOCAL_PATH)/../../breakpad/android/google_breakpad/Android.mk
+  include $(LOCAL_PATH)/../../breakpad/src/android/google_breakpad/Android.mk
 endif

@@ -1,31 +1,24 @@
 #include <jni.h>
-#include <stdio.h>
-#include "client/linux/handler/exception_handler.h"
-#include "client/linux/handler/minidump_descriptor.h"
 
-static google_breakpad::ExceptionHandler* exceptionHandler;
-bool DumpCallback(const google_breakpad::MinidumpDescriptor& descriptor,
-                  void* context,
-                  bool succeeded) {
-  printf("Dump path: %s\n", descriptor.path());
-  return succeeded;
-}
-
-void Crash() {
-  volatile int* a = reinterpret_cast<volatile int*>(NULL);
-  *a = 1;
-}
+#include "breakpad.h"
+#include "crash.h"
 
 extern "C" {
 
-void Java_com_hockeyapp_breakapp_MainActivity_setUpBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
+void Java_com_hockeyapp_breakapp_MainActivity_setUpBreakpad(JNIEnv* env, jobject obj, jstring filepath, jboolean moreDump) {
   const char *path = env->GetStringUTFChars(filepath, 0);
-  google_breakpad::MinidumpDescriptor descriptor(path);
-  exceptionHandler = new google_breakpad::ExceptionHandler(descriptor, NULL, DumpCallback, NULL, true, -1);
+  setUpBreakpad(path, moreDump);
 }
 
-void Java_com_hockeyapp_breakapp_MainActivity_nativeCrash(JNIEnv* env, jobject obj) {
-  Crash();
+void Java_com_hockeyapp_breakapp_MainActivity_nativeCrash(JNIEnv* env, jobject obj, jboolean withHeap) {
+  if (withHeap) {
+    CrashWithHeap();
+  } else {
+    CrashWithStack();
+  }
 }
 
+jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+	return JNI_VERSION_1_6;
+}
 }
