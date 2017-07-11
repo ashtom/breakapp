@@ -5,9 +5,9 @@
 
 extern "C" {
 
-void Java_com_hockeyapp_breakapp_MainActivity_setUpBreakpad(JNIEnv* env, jobject obj, jstring filepath) {
+void Java_com_hockeyapp_breakapp_MainActivity_setUpBreakpad(JNIEnv* env, jobject obj, jstring filepath, jboolean moreDump) {
   const char *path = env->GetStringUTFChars(filepath, 0);
-  setUpBreakpad(path);
+  setUpBreakpad(path, moreDump);
 }
 
 void Java_com_hockeyapp_breakapp_MainActivity_nativeCrash(JNIEnv* env, jobject obj) {
