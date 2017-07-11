@@ -14,4 +14,7 @@ void Java_com_hockeyapp_breakapp_MainActivity_nativeCrash(JNIEnv* env, jobject o
   CrashWithStack();
 }
 
+jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+	return JNI_VERSION_1_6;
+}
 }
