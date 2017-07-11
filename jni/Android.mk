@@ -14,5 +14,5 @@ include $(BUILD_SHARED_LIBRARY)
 ifneq ($(NDK_MODULE_PATH),)
   $(call import-module,google_breakpad)
 else
-  include $(LOCAL_PATH)/../../breakpad/android/google_breakpad/Android.mk
+  include $(LOCAL_PATH)/../../breakpad/src/android/google_breakpad/Android.mk
 endif
