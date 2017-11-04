@@ -9,7 +9,12 @@ This demo app shows how to use Breakpad with HockeyApp on Android. The app consi
         
 2. Checkout Google Breakpad in the same directory:
 
-        svn checkout http://google-breakpad.googlecode.com/svn/trunk/ Breakpad
+        git clone https://chromium.googlesource.com/breakpad/breakpad Breakpad
+
+3. Checkout linux-syscall-support into the breakpad app
+
+        cd ~/Projects/Breakpad
+        git clone https://chromium.googlesource.com/linux-syscall-support src/third_party/lss
 
 3. Build Breakpad:
 
